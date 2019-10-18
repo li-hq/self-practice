@@ -1,0 +1,358 @@
+一、	解决开根号问题（二分法）
+实现 int sqrt(int x) 函数。
+计算并返回 x 的平方根，其中 x 是非负整数。
+由于返回类型是整数，结果只保留整数的部分，小数部分将被舍去。
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/sqrtx
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+1、使用二分法
+//使用二分法找到相应的开跟方法。
+//1、这里的二分适用于所有情况，返回的是不大于x的最后一个元素
+//2、这里的查找区间为左闭右开，即设置了一个右边的哨兵，若用在数组中以a[n]为例则初次传输的参数应为0、n。因为返回的是—a，所以必须设有右边的哨兵，在无哨兵的情况下，在所判断值大于右边最大元素的时候会返回倒数第二个元素
+//3、返回的两个区间分别为[lo,mi）和[mi+1,hi）。
+//4、递归结束条件为lo>=li
+//5、可改进为不适用递归，见后面的erfenn函数
+int erfen(long int a,long int b,long int x)
+{
+    if(a >= b)							
+        return --a;
+    long int mid = (a+b)/2;
+    long int temp=mid*mid;
+    if(x < temp)
+        return erfen(a,mid,x);
+    else 
+        return erfen(mid+1,b,x);
+    return 0;
+}
+int mySqrt(long int x){
+    return erfen(0,x+1,x);
+}
+erfenn：
+int erfenn(long int lo,long int hi,long int x)
+{
+	while(lo<hi)
+	{
+		long int mid = (lo+hi)/2;·				//计算mid
+		long int temp=mid*mid;				//计算所要比较的数temp
+		x<temp ? hi=mid:lo=mid+1;			//与要比较的数作比较，
+}										//用数组则temp改为a[mid]即可
+	return --lo;
+}
+2、使用计算方法
+//1、此方法数学证明基于平方和公式，细思可证。
+//2、在时间复杂度上，表面上看应该是klog（10|n）。但是由于实际上使用过多的乘法与循环，导致实际使用时间比二分还要高。
+
+
+
+int ss(int x,int t,int num,int *s)			//找到后一位
+{
+	if(num==0)					//递归结束标志，num为0，即次数到达了
+		return t;
+	int i=9;
+	int temp2=(20*t+i)*i;
+	for(i=9;temp2>x;i--)
+		temp2=(20*t+i-1)*(i-1);
+	int temp3=(x-temp2)*100+s[num-1];
+	return ss(temp3,t*10+i,num-1,s);		//继续找下一位
+}
+int sqar1(int x)
+{
+	int i=0,j=9;
+	int stt[100];
+	for(i=0;x/100>0;i++)
+	{	
+		s[i+1]=x%100;
+		x=x/100;
+	}
+	return ss(x,0,i+1,s);
+}
+3、类似问题：
+给定一个正整数 num，编写一个函数，如果 num 是一个完全平方数，则返回 True，否则返回 False。
+//这个问题就是对上面的二分法的练习，只是简单的将相应的位置的判断条件改变了一下，就完成了相应的功能，可见写好一个好的模板有多重要。
+bool isPerfectSquare(long int num){
+    long int lo = 0,hi = num+1,mi,temp;
+    while(lo<hi)
+    {
+        mi = (lo+hi)/2;
+        temp = mi*mi;
+        if(num<temp) hi=mi;
+        else lo=mi+1;
+    }
+    return ((--lo)*lo==num);
+}
+二、	两数相加（链表）
+给出两个 非空 的链表用来表示两个非负的整数。其中，它们各自的位数是按照 逆序 的方式存储的，并且它们的每个节点只能存储 一位 数字。
+如果，我们将这两个数相加起来，则会返回一个新的链表来表示它们的和。
+您可以假设除了数字 0 之外，这两个数都不会以 0 开头。
+示例：
+输入：(2 -> 4 -> 3) + (5 -> 6 -> 4)
+输出：7 -> 0 -> 8
+原因：342 + 465 = 807
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/add-two-numbers
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+//今天写代码主要存在3个问题：
+//1、就是没有注意节点的声明，使用链表时，每次都要重新申请一个新的节点，在C中还需要相应的使用malloc函数来给予相应的空间。
+//2、在循环的时候没有注意循环结束的条件，以及相应操作的继续条件，这里循环结束应当是当前指针所指为空，而不是next域为空，若使用next域为空作为结束条件，则会导致少计算一个节点。还有返回时应该按要求返回一个不带头指针的链表。
+//3、统一下一步操作，此处我时参照了别处的才写出来的，自己写可能会麻烦的很多，还需要加强训练。
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+struct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2){
+    struct ListNode *res,*next,*cur;
+    res =(struct ListNode *)malloc(sizeof(struct ListNode));	
+    res->next = NULL;
+    cur = res;
+    int temp=0,c=0;									//初始化
+    while(l1 != NULL||l2 != NULL||c)
+    {
+        next =(struct ListNode *)malloc(sizeof(struct ListNode));
+        next->next = NULL;
+        cur->next = next;
+        cur = next;									//每次先建立一个新节点
+        if(l1 != NULL) {temp += l1->val; l1 = l1->next;}	//加上l1对应位
+        if(l2 != NULL) {temp += l2->val; l2 = l2->next;}	//加上l2对应位
+        temp += c;									//加上进位符c
+        cur->val = temp%10;							//得到当前位结果
+        c = temp/10;									//得到新进位符
+        temp = 0;									//重置temp
+    }
+return res->next;									//因为链表包含头节点，无值
+												//所以这里按照返回格式要求
+												//只返回书开始的节点
+}
+三、	合并K个排序链表（链表，并归排序）
+合并 k 个排序链表，返回合并后的排序链表。请分析和描述算法的复杂度。
+
+示例:
+
+输入:
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+输出: 1->1->2->3->4->4->5->6
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/merge-k-sorted-lists
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+//此题我采用了两路并归的算法，分层次、分组别将两个有序链表合成一个有序链表。
+//总体时间复杂度应该为（NlogM）级别，其中N为所要排序的总数的个数，M为输入链表的个数。一共执行logM层，每层完成将相邻的两个链表合成一个，即链表总数变为二分之一。每一层的比较的数的个数为总的数的个数N。
+//此题还可以采用1暴力：放在一个数组中，排序，放入链表O（NlogN）。
+2逐一比较：即一次并归完成所有链表O（NM）
+等……
+//在空间复杂度上，如果可以破坏原有链表则只需要O（1）的空间复杂度，如果不能破坏的原有链表，应当为O(N)总体符合题目要求。
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+struct ListNode* bg(struct ListNode *l1,struct ListNode *l2)	//两路并归
+{
+    struct ListNode *head = (struct ListNode*)malloc(sizeof(struct ListNode)),*cur;
+    head->next = NULL;
+    cur = head;								//初始化
+    while(l1 != NULL||l2 != NULL)
+    {
+        if(l1 == NULL)						//若其中一个已为空， 
+            {cur->next = l2; break;}				//则将剩下一个直接接在上面即可
+        if(l2 == NULL)
+            {cur->next = l1; break;}
+        struct ListNode *next = (struct ListNode*)malloc(sizeof(struct ListNode));
+        next->next = NULL;
+        cur->next = next;					//其中加粗的是创建下一个结点的代码
+        cur = next;
+        if(l1->val <= l2->val)					
+        {
+            next->val = l1->val;				//哪个小就将哪个的值给新节点
+            l1 = l1->next;						//将小的链表后移一位
+        }
+        else
+        {
+            next->val = l2->val;
+            l2 = l2->next;
+        }
+    }
+    return head->next;						//返回不带头节点的链表
+}
+struct ListNode* mergeKLists(struct ListNode** lists, int listsSize){
+    if(listsSize == 0) return 0;					//输入为空时直接返回空
+    struct ListNode **head = (struct ListNode**)malloc(sizeof(struct ListNode*)*listsSize);
+    int i = 0;									//初始化，创建新的链表指针
+    while(i != listsSize)							//防止破坏原来的链表
+       { head[i] = lists[i]; i++;}					//将原链表指针全部给新创建的
+    while(listsSize != 1)						//层次循环，一次循环实现链表个数除2
+    {
+        for(i = 0;i<=(listsSize/2-1);i++)			//并归循环，一次合并两个链表到一个里
+            head[i] = bg(head[i*2],head[i*2+1]);
+        if(listsSize%2 == 1)						//若总链表数为单数，
+            head[i++] = head[listsSize-1];		//最后一个链表直接进入下一层
+        listsSize = i;							//修改相应的链表个数。
+    }
+    return head[0];							//最后只剩下一个链表且在head[0]位置
+}
+四、	分隔链表（链表）
+给定一个链表和一个特定值 x，对链表进行分隔，使得所有小于 x 的节点都在大于或等于 x 的节点之前。
+
+你应当保留两个分区中每个节点的初始相对位置。
+
+示例:
+
+输入: head = 1->4->3->2->5->2, x = 3
+输出: 1->2->2->4->3->5
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/partition-list
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+
+1、解法1：原有链表基础上挪动
+//这是此时还不够优秀的我想出来的比较low的算法，原理就是类似于插排序，记录当前的的小于x的最后一个结点，依次遍历整个链表，如果比x小就将该结点插入到当前记录的结点后，然后改动链表使当前链表可以继续该步骤。
+//整个算法就一个循环，时间复杂度为O（N）N为结点数量，因为每个结点遍历且只遍历一遍，所以只是线性的时间复杂度。
+//空间复杂度为O（1）即常数个辅助空间。
+//但是这个算法存在的一个大问题，就是线性的k太大了，相比较于更优化的算法，也就是后面的解法二而言，来说，这个就太慢了。
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+
+struct ListNode* partition(struct ListNode* head, int x){
+    struct ListNode *mi,*cur,*temp;
+    cur = (struct ListNode*)malloc(sizeof(struct ListNode));
+    cur->next = head;						//每次判断的是cur->next，第一次是head
+    mi = cur;								//初始的min数组无结点，从cur开始
+    head = cur;							//head->next为返回位置，提前设置
+    while(cur->next != NULL)				//后面还有结点
+    {
+        if(cur->next->val < x&&mi != cur)	//若mi==cur进行如此步骤则会卡住。
+        {								//判断为<x的一般情况
+            temp = cur->next->next;		//破坏后可以找到后面相应的结点
+            cur->next->next = mi->next;	//与下一行构成插入结点
+            mi->next = cur->next;
+            mi = mi->next;				//设置新的mi
+            cur->next = temp;			//把后面的链表接上来
+        }
+        else if(cur->next->val < x)			//mi==cur的情况，不用插入，直接后移
+        {
+            mi = mi->next;				//设置新的mi
+            cur = cur->next;				//设置心得cur
+        }
+        else	
+            cur = cur->next;				//大于时直接判断下一个即可
+    }
+    return head->next;					//head当前空，head->next才为开始处
+}
+2、解法2：两个链表单独的做，最后合并
+//这是推荐解，相比较于我哪个low的算法而言，时间复杂度的数量级是一样的，但是系数会更小。
+//原理就是依次遍历，小则接在小的链表上，大就接在大的链表上，最后连起来就是结果。
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+
+struct ListNode* partition(struct ListNode* head, int x){
+    struct ListNode *mi,*ma,*mi0,*ma0;
+    mi = (struct ListNode*)malloc(sizeof(struct ListNode)); 	//初始化
+    ma = (struct ListNode*)malloc(sizeof(struct ListNode));	//初始化
+    mi0 = mi;   ma0 = ma;							//两个链表的头结点
+    while(head != NULL)
+    {
+        if(head->val < x)				//小于则放mi后面
+        {
+            mi->next = head; 				
+            mi = mi->next; 
+        }
+        else	
+        {
+            ma->next = head; 				//不小于则放ma后面
+            ma = ma->next; 
+        }  
+        head = head->next;					//查看下一个结点
+    }
+    ma->next = NULL;						//设置尾结点
+    mi->next = ma0->next;					//连接两个链表
+    return mi0->next;							//返回不带头结点的链表
+}
+五、	寻找两个有序数组的中位数（数组，二分查找）
+给定两个大小为 m 和 n 的有序数组 nums1 和 nums2。
+
+请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
+
+你可以假设 nums1 和 nums2 不会同时为空。
+
+示例 1:
+
+nums1 = [1, 3]
+nums2 = [2]
+
+则中位数是 2.0
+
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/median-of-two-sorted-arrays
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
+//1、本题采用了二分法的思想，首先分析，设总个数为n的一数组nums，则中位数就是前面有n/2个数即nums[n/2]和前面有（n-1）/2个数即nums[(n-1)/2]的和的二分之一，这样做的目的就是统一了奇数总书和偶数总数的区别。
+//2、讲二分策略此处调用两次找前面有beforenum个数的函数，即bisearch返回的是一个数，这个数前面会有beforenum个数。通过二分法，逐一排除区间，最后找到可能的值。
+//3、二分中的注意事项：首先这里的二分的边界设置为1到n1Size，也就是说查找结束后返回的li区间为0到n1Size-1。这样是为了防止在二分过程中出现mi==0的情况，从而导致对应的n2[beforemum- mi]发生数组下标上溢。二是防止返回li==-1的情况，此时又要加以讨论相应的边界情况。
+//4、初始边界判断：首先在主函数中就将两个数组的顺序进行调整，保证n1不比n2大，因题中说明都不为空，所以调整后只有可能n1为空，此时对应中位数可直接在n2中找出来。其次当两个数组都只有一个元素的时候，因为此时传输进去的beforenum含有0会导致查找的出错，又需要讨论新的情况，而此时的中位数可以直接得出，所以增加此边界判断。
+//5、二分边界判断1：在完成二分后，会出现对应的2种边界值，即li==beforenum和li==0。
+这里因为正常情况下需要使用到n2[beforenum-1-li]，所以需要判断此时的情况，此时直接返回n1[beforenum]即可。
+//6、二分边界判断2：另一种是li==0时因为在初始时设置的二分区间是从1开始，当返回0时说明此时只有0号元素和与之对应的n2中的元素，可以为返回值，所以此时情况为若n1[0]<n2[beforenum-1]则n2[beforenum-1]就是返回值，若大于则继续判断，此时当且仅当beforenum != n2Size&&n2[beforenum] < n1[0]时才是n2[beforenum]，否则就是n1[0]。
+//7、二分正常结束并返回：此时判断n1[li]和n2[beforenum-mi-1]的大小，返回大的一个。
+//8、时间复杂度：这个算法的总体时间复杂度为O（log（min（N，M））其中N，M为两数组大小。符合题目要求。整个算法调用两次子函数，每次只有一个二分的时间复杂度为logN级别的二分查找循环，其他的都是边界判断。所以总体时间复杂度为如此。
+//9、空间复杂度：本算法的空间复杂度为O（1）即常数即别的空间复杂度，只有主函数中申明的4个临时变量，调用子函数所保存的信息，以及子函数中所申明的5个变量，再无其他辅助空间。
+//10、其他解法：对于官给出的解法，时间复杂度和我这个是一样的，但仔细分析会发现，官方给出的解答与我的有有所不同，官方的答案中二分循环体复杂，单次的判断和执行语句过多，会影响时间复杂度前面的系数，但在某些情况下会直接破出循环。而我这个二分算法，采用的时邓俊辉教授所教的二分查找算法，特点是返回不大于查找元素的最后一个元素，虽然循环简单，但是在循环次数固定会最终缩小范围到一个元素的情况下才会最终返回结果。总体而言与官方的算法各有有点。
+算法实现代码如下：
+int bisearch(int* n1,int n1Size,int* n2,int n2Size,int beforenum)
+{
+    int li = 1,ho = n1Size,mi,temp,result;		//设置查找区间
+    while(li < ho)
+    {
+        mi = (li+ho)/2;
+        temp = n2[beforenum - mi];		//加粗为二分查找过程
+        (temp < n1[mi]) ? (ho = mi) : (li = mi+1);
+    }
+    --li;									//最终得到li
+    if(li == beforenum)					//边界判断1
+        return n1[li];
+    else if(li == 0)							//边界判断2
+        result = (n1[0] < n2[beforenum-1]) ? n2[beforenum-1] : ((beforenum != n2Size&&n2[beforenum] < n1[0]) ? n2[beforenum] : n1[0]);
+    else									//正常情况
+        result = (n1[li] < n2[beforenum-1-li]) ? n2[beforenum-1-li] : n1[li];
+    return result;							//返回查找到的值
+}
+double findMedianSortedArrays(int* nums1, int nums1Size, int* nums2, int nums2Size){
+    double result;
+    int sum = nums1Size + nums2Size;
+    int *temp = nums1,tempSize = nums1Size;
+    if(nums1Size > nums2Size)				//调整数组使n1不大于n2
+    {
+        nums1 = nums2;  nums1Size = nums2Size;  
+        nums2 = temp;   nums2Size = tempSize;
+    }
+    if(nums1Size == 0)				//边界判断，有一个数组为空
+        result = nums2[sum/2]+nums2[(sum-1)/2];
+    else if(sum == 2)					//边界判断，都只有一个元素
+        result = nums1[0]+nums2[0];
+    else								//正常情况
+        result = bisearch(nums1,nums1Size,nums2,nums2Size,sum/2) + bisearch(nums1,nums1Size,nums2,nums2Size,(sum-1)/2);	//用两次函数分别找相应的数
+    return result/2;					//前面的出的result都是实际中位数的两倍。
+}
